@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CDC Service Strategy Overview</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #07182D;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start; /* Changed to flex-start for better top alignment of wrapper */
+      min-height: 100vh;
+      color: white;
+    }
+
+    .main-wrapper { /* NEW WRAPPER */
+      display: flex;
+      flex-direction: column; 
+      align-items: center;   
+      width: 100%; 
+      /*max-width: 1400px; /* Adjust as needed for overall content width */
+      margin-top: 60px; /* Space for the absolute positioned page-title */
+    }
+
+    .page-title {
+      position: absolute; /* Stays absolute, main-wrapper margin handles space */
+      top: 20px;
+      left: 30px;
+      margin: 0;
+      color: #fff;
+      font-size: 2rem;
+      letter-spacing: 1px;
+      z-index: 1000;
+      font-weight: bold;
+      font-family: Arial, sans-serif;
+    }
+
+    .content-area { /* Your new content area */
+        background-color: rgba(17, 42, 68, 0.8);
+        border: 1px solid #02C8FF;
+        border-radius: 8px;
+        padding: 20px; /* Adjusted padding */
+        min-height: 30px;
+        width: 90%; /* Takes width of main-wrapper */
+        /*max-width: 1000px; /* Max width for this box */
+        margin-bottom: 30px; /* Space before the container */
+        text-align: left; /* Align text left within this box */
+    }
+
+    .content-area h2 { 
+        color: #FECC02;
+        text-align: center; /* Changed to left for this box */
+        margin-top: 0;
+        font-size: 1.5rem; /* Slightly smaller h2 for this box */
+        margin-bottom: 15px;
+        cursor: pointer;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .content-area h2:hover {
+        color: #02C8FF;
+    }
+
+    .collapse-arrow {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%) rotate(90deg);
+        transition: transform 0.3s ease;
+        font-size: 14px;
+        color: #FECC02;
+    }
+
+    .content-area.collapsed .collapse-arrow {
+        transform: translateY(-50%) rotate(0deg);
+    }
+
+    .content-details {
+        transition: max-height 0.3s ease, opacity 0.3s ease;
+        overflow: hidden;
+        max-height: 1000px;
+        opacity: 1;
+    }
+
+    .content-area.collapsed .content-details {
+        max-height: 0;
+        opacity: 0;
+    }
+
+    .content-area p {
+        margin-bottom: 10px;
+        line-height: 1.6;
+    }
+    /* Removed font tag styling, use CSS instead if needed */
+    .content-area strong { /* For "Guidance:" and "Disclaimer:" */
+        color: #FECC02;
+        font-size: 1em; /* Make labels slightly larger */
+    }
+
+
+    .container {
+      display: flex;
+      flex-direction: row;
+      align-items: center; /* Keeps columns vertically centered relative to each other */
+      gap: 20px;
+      width: 100%; /* Allow container to use available width within main-wrapper */
+      justify-content: center; /* Center the columns if they don't fill the container */
+    }
+
+    .column {
+      background-color: #112a44;
+      border: 2px solid #02C8FF;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      min-width: 350px;
+      max-width: 350px; /* Optional: if you want to constrain column width */
+    }
+
+    .column h3 {
+      color: #FECC02;
+      margin-bottom: 15px;
+      margin-top: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.1em; /* Consistent h3 size */
+    }
+
+    .column h3 > span:first-child,
+    .design-box h3 > span:first-child,
+    .final-box h3 > span:first-child {
+        flex-grow: 1;
+        text-align: left;
+        margin-right: 5px;
+    }
+
+    .info-icon {
+        flex-shrink: 0;
+        color: #6B6B6B;
+        font-weight: bold;
+        font-size: 1em; /* Relative to parent h3 font-size */
+        cursor: help;
+        border: 1px solid transparent;
+        border-radius: 50%;
+        padding: 0px 3px;
+        line-height: 1;
+        margin-left: 8px;
+    }
+    .info-icon:hover {
+        color: #FECC02;
+        background-color: #6B6B6B;
+    }
+
+    .column h3 .info-icon,
+    .design-box h3 .info-icon,
+    .final-box h3 .info-icon {
+        color: #FECC02;
+    }
+    .column h3 .info-icon:hover,
+    .design-box h3 .info-icon:hover,
+    .final-box h3 .info-icon:hover {
+         color: #FFFFFF;
+         background-color: #0a2540;
+    }
+
+    .accordion-box {
+      background-color: #D6D6D6;
+      color: black;
+      padding: 10px 40px 10px 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      position: relative;
+      text-align: left;
+      font-size: 0.95em;
+    }
+
+    .accordion-box:hover {
+      background-color: #02C8FF;
+    }
+
+    .accordion-arrow {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%) rotate(0deg);
+      transition: transform 0.3s ease;
+      font-size: 14px;
+    }
+
+    .accordion-box.active .accordion-arrow {
+      transform: translateY(-50%) rotate(90deg);
+    }
+
+    .accordion-box.active {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .accordion-content {
+      display: none;
+      padding: 10px 15px;
+      background-color: white;
+      color: black;
+      text-align: left;
+      margin-top: -10px;
+      border-bottom-left-radius: 5px;
+      border-bottom-right-radius: 5px;
+      font-size: 0.9em;
+    }
+
+    .accordion-content ul {
+      padding-left: 20px;
+      margin-top: 5px;
+      margin-bottom: 5px;
+    }
+    .accordion-content li {
+      margin-bottom: 5px;
+    }
+    .accordion-content p {
+      margin-top: 5px;
+      margin-bottom: 10px;
+    }
+
+    .accordion-box.active + .accordion-content {
+      display: block;
+    }
+
+    .box {
+      background-color: #D6D6D6;
+      color: black;
+      font-size: 1em; /* Relative to parent .column */
+      padding: 10px 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      text-align: left;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .box:hover {
+      background-color: #02C8FF;
+    }
+
+    .box .info-icon {
+        color: #6B6B6B;
+        font-weight: bold;
+        font-size: 1em;
+        cursor: help;
+        border: 1px solid transparent;
+        border-radius: 50%;
+        padding: 0px 3px;
+        line-height: 1;
+        margin-left: 8px;
+    }
+
+    .box .info-icon:hover {
+        color: #FECC02;
+        background-color: #6B6B6B;
+    }
+
+    .arrow {
+      border: solid white;
+      border-width: 0 6px 6px 0;
+      display: inline-block;
+      padding: 10px;
+      transform: rotate(0deg);
+      margin: 0 5px;
+      align-self: center;
+    }
+
+    .arrow.right {
+      transform: rotate(-45deg);
+    }
+
+    .arrow-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .spacer {
+      height: 10px;
+    }
+
+    .spacer.large {
+      height: 90px;
+    }
+
+    .final-box {
+      background-color: #112a44;
+      border: 2px solid #74BF4B;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      min-width: 220px;
+      height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .final-box h3 {
+      margin: 0;
+      color: #FECC02;
+      font-size: 1em; /* Relative to parent .final-box */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      text-align: left;
+    }
+
+    .design-box {
+      background-color: #112a44;
+      border: 2px solid #02C8FF;
+      border-radius: 8px;
+      padding: 15px;
+      min-width: 220px;
+      text-align: center;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .design-box h3 {
+      color: #FECC02;
+      margin: 0;
+      font-size: 1em; /* Relative to parent .design-box */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .custom-tooltip {
+        position: absolute;
+        background-color: #333;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        z-index: 10000;
+        font-size: 14px;
+        width: 250px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        pointer-events: none;
+        line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+    <div class="main-wrapper"> 
+        <h1 class="page-title">CF Example CDC Strategy</h1>
+
+        <div class="content-area">
+            <h2>
+                Guidance and Disclaimer
+                <span class="collapse-arrow">&#9654;</span>
+            </h2>
+            <div class="content-details">
+                <p><strong>Guidance:</strong> <font size="2" color="#FFFFFF">
+                  <br>
+                  This interactive tool has been developed for CF to explore an example CDC Strategy and is intended to provide the following:
+                  <ul>
+                    <li>Familiarisation of the CDC Strategy structure and how the Stakeholder Intent informs the services that form the CDC Service Catalogue, which in turn informs the People, Process and Technology required to support the services.</li>
+                    <li>Example Stakeholder Intent 'items' (Key Drivers, Vision, Mission Statement, etc.).</li>
+                    <li>An example CDC Service Catalogue, including a set of potential CDC services organised in a prospective functional structure.</li>
+                    <li>Example role personas, operational processes and supporting technologies based on the example CDC Service Catalogue.</li>
+                    <li>An example roadmap to implement and mature the CDC over the next three years.</li>
+                  </ul>
+    Attendees at the future <font size="2" color="#FFFFFF"><strong>CDC Strategy Workshop (19th-21st August)</strong></font> should familiarise themselves with the example CDC Strategy and prepare the following:
+                  <ul>
+                    <li>Suggested Stakeholder Intent 'items' (Key Drivers, Vision, Mission Statement, etc.).</li>
+                    <li>A list of services that are specified in the example CDC Service Catalogue that should not be provided by the future CDC.</li>
+                    <li>A list of additional services that should be provided by the future CDC but are not in the example CDC Service Catalogue.</li>
+                    <li>A high-level view of the roll-out of the CDC services, e.g. which should be implemented in the first year, the second year, etc.</li>
+                  </ul>
+    Completion of the above will help ensure the CDC Strategy Workshop can focus on discussing and capturing CF's stakeholder intent, the value, advantages and disadvantages of the inclusion of each service, the optimal operating model, and the potential implementation and development roadmap.
+    </font>
+    </p>
+              <p><strong>Disclaimer:</strong></p><font size="2" color="#FFFFFF">
+                <ul>  
+                  <li>This is an example CDC strategy that includes a comprehensive set of CDC services that Cisco has seen similar organisations to CF perform or plan to perform. It is highly likely that CF will not need all the services described, and there may be services that CF require that are not currently included. The actual CF Service Catalogue will be discussed and agreed on at the CDC Strategy Workshop.</li>
+                  <li>The Stakeholder Intent 'items' (Key Drivers, Vision, Mission Statement, etc.) provided are examples to aid CF's understanding of the development of the strategy. CF's actual Stakeholder Intent 'items' will be discussed and captured at the CDC Strategy Workshop.</li>
+                  <li>The role personas, operational processes and supporting technologies provided are examples to aid CF's understanding of the development of the strategy. The actual role personas, operational processes and supporting technologies to deliver CF's CDC will be discussed and captured at the CDC Strategy Workshop.</li>
+                  <li>The roadmap provided is an example to aid CF's understanding of the implementation of the strategy. CF's actual roadmap will be discussed and captured at the CDC Strategy Workshop.</li>
+                </ul>
+            </font>
+            </div>
+        </div>
+<br>
+<br>
+<br>
+<br>
+<br>
+        <div class="container">
+  <div class="column">
+    <h3>
+        <span>Stakeholder Intent</span>
+        <span class="info-icon" data-description="This section outlines the primary goals, motivations, and strategic importance from the perspective of key parties involved in the Cyber Defence Centre.">ⓘ</span>
+    </h3>
+    <div class="accordion-box">Key Drivers <span class="accordion-arrow">&#9654;</span></div>
+    <div class="accordion-content">
+        <p><li><strong>Key Driver 1:</strong>To create a sovereign, autonomous, and resilient Cyber Defence Centre that acts as the central command for digital defence operations across all branches of the armed forces, enabling  cyber situational awareness, early detection, unified response and assurance in the face of evolving cyber threats.</li></p>
+		<p><li><strong>Key Driver 2:</strong>xxxxx</li></p>
+		<p><li><strong>Key Driver 3:</strong>xxxxx</li></p>
+		<p><li><strong>Key Driver 4:</strong>xxxxx</li></p>
+    </div>
+    <div class="accordion-box">Vision/Mission <span class="accordion-arrow">&#9654;</span></div>
+    <div class="accordion-content">
+        <p><strong>Vision:</strong><br>
+        To be Europe's most advanced and trusted cyber defence stronghold — a digital mothership that empowers military superiority through cyber dominance, technological innovation, and allied interoperability.</p>
+        <p><strong>Mission:</strong><br>
+        Establish, operate, and evolve a centralised Cyber Defence Centre that detects, disrupts, and defeats cyber adversaries by leveraging integrated intelligence, AI-driven threat detection, and rapid response capabilities.</p>
+    </div>
+    <div class="accordion-box">Stakeholders/Consumers <span class="accordion-arrow">&#9654;</span></div>
+    <div class="accordion-content">
+        <ul>
+			<strong>Stakeholders</strong>
+            <li>Ministry of Defence (Strategic Command)</li>
+            <li>Stakeholder 2</li>
+            <li>Stakeholder 3</li>
+			<br>
+			<strong>Consumers</strong>
+            <li>Army, Navy, Air Force, Space and Cyber Commands</li>
+            <li>NATO-aligned partner forces and cyber coalitions</li>
+            <li>National cyber threat intelligence units</li>
+            <li>Secure government communication channels</li>
+            <li>Internal cybersecurity units and red teams</li>
+            <li>Defence industrial base and trusted technology vendors</li>
+            <li>Consumer 7</li>
+            <li>Consumer 8</li>
+        </ul>
+    </div>
+    <div class="accordion-box">Cybersecurity Organisational Structure <span class="accordion-arrow">&#9654;</span></div>
+    <div class="accordion-content">
+        <p>Details about CF Cybersecurity Organisational Structure.</p>
+    </div>
+<div class="accordion-box">Core Principles <span class="accordion-arrow">&#9654;</span></div>
+    <div class="accordion-content">
+        <ul>
+            <li><strong>Unified Defence Command:</strong> Operate as the central, authoritative command for all cyber defence operations, ensuring coordinated action and response.</li>
+			<li><strong>Full-Spectrum Situational Awareness:</strong> Strive for complete visibility across the digital domain for rapid, informed decision-making.</li>
+            <li><strong>Sovereignty and Resilience:</strong> Prioritize national digital sovereignty and build resilient systems to ensure mission continuity.</li>
+            <li><strong>Technological Superiority & Innovation:</strong> Continuously adopt and develop advanced technologies, including AI, to maintain a defensive edge.</li>
+            <li><strong>Mission Assurance Focus:</strong> Ensure all cyber defence efforts directly support and assure the success of primary missions.</li>
+            <li><strong>Interoperability & Collaboration:</strong> Foster trusted interoperability with national and allied partners for collective defence.</li>
+            <li><strong>Continuous Evolution & Adaptability:</strong> Commit to ongoing improvement of doctrine, capabilities, and readiness against evolving threats.</li>
+			<li><strong>Principle 8:</strong> xxxxxxxx.</li>
+			<li><strong>Principle 9:</strong> xxxxxxxx.</li>
+			<li><strong>Principle 10:</strong> xxxxxxxx.</li>
+
+        </ul>
+    </div>
+    <div class="accordion-box">Asset Scope <span class="accordion-arrow">&#9654;</span></div>
+    <div class="accordion-content">
+        <ul>
+            <li>Secure military networks and classified enclaves</li>
+            <li>Deployed battlefield communications infrastructure</li>
+            <li>Mission systems, weapons platforms, and logistics networks</li>
+            <li>Satellite communications and ISR feeds</li>
+            <li>Cyber ranges, digital twins, and training simulators</li>
+            <li>Secure air-gapped, mobile and edge computing units</li>
+            <li>Scope 7</li>
+            <li>Scope 8</li>
+        </ul>
+    </div>
+    <div class="accordion-box">Desired Outcomes <span class="accordion-arrow">&#9654;</span></div>
+    <div class="accordion-content">
+        <ul>
+            <li>Full-spectrum cyber situational awareness and operational visibility</li>
+            <li>AI-augmented cyber decision-making and accelerated threat response</li>
+            <li>Operational readiness across peace, crisis, and conflict conditions</li>
+            <li>Trusted cyber interoperability with European and NATO defence frameworks</li>
+            <li>Continuous evolution of cyber doctrine and capability maturity</li>
+            <li>Preservation of mission assurance and national digital sovereignty</li>
+			      <li>Outcome 7:</li>
+			      <li>Outcome 8:</li>
+        </ul>
+    </div>
+  </div>
+
+  <div class="arrow right"></div>
+
+  <div class="column">
+    <h3>
+        <span>High-Level CDC Service Catalogue</span>
+        <span class="info-icon" data-description="Presents a structured overview of all key cybersecurity services offered by the Cyber Defence Centre. This catalogue helps stakeholders understand available capabilities, their purpose, and how they contribute to the overall defence strategy. It typically includes service names, brief descriptions, and may link to more detailed service information.">ⓘ</span>
+    </h3>
+    <a href="service_catalogue.html" style="text-decoration: none;">
+      <div class="box">Service Catalogue</div>
+    </a>
+    <div class="box">
+        <span>Service Components</span>
+        <span class="info-icon" data-description="Individual functional elements that make up each service in the CDC catalogue. An example of this can currently be seen in the overall service catalogue but this specific link is currecntly non-functional and will be discussed further in the workshop. ">ⓘ</span>
+    </div>
+    <div class="box">
+        <span>Service Operating Model</span>
+        <span class="info-icon" data-description="Defines how each CDC service is delivered, managed, and operated on a day-to-day basis. This specific link is currecntly non-functional and will be discussed further in the workshop.">ⓘ</span>
+    </div>
+    <div class="box">
+        <span>Service Capability Target</span>
+        <span class="info-icon" data-description="Specific performance objectives and functional requirements that each CDC service must achieve. This specific link is currecntly non-functional and will be discussed further in the workshop.">ⓘ</span>
+    </div>
+    <div class="box">
+        <span>Service Maturity Target</span>
+        <span class="info-icon" data-description="The desired level of development and sophistication for each CDC service over time. This specific link is currecntly non-functional and will be discussed further in the workshop.">ⓘ</span>
+    </div>
+    <div class="box">
+        <span>Service Structure</span>
+        <span class="info-icon" data-description="The organizational and architectural framework that defines how CDC services are arranged and grouped. An example of this can currently be seen in the overall service catalogue but this specific link is currecntly non-functional and will be discussed further in the workshop.">ⓘ</span>
+    </div>
+  </div>
+
+  <div class="arrow-column">
+    <div class="arrow right"></div>
+    <div class="spacer"></div>
+    <div class="spacer large"></div>
+    <div class="arrow right"></div>
+    <div class="spacer large"></div>
+    <div class="arrow right"></div>
+  </div>
+
+<!-- Third Column: Three Separate Blue Outline Boxes -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <a href="persona_inventory.html" style="text-decoration: none; color: inherit;">
+      <div class="design-box">
+        <h3>
+          <span>CDC Conceptual Persona Inventory</span>
+          <span class="info-icon" data-description="Defines the hierarchical arrangement, roles, responsibilities, and reporting lines within the Cyber Defence Centre needed to perform the services. This plan ensures clear accountability and efficient operations along with ensuring personnel capacity planning.">ⓘ</span>
+        </h3>
+      </div>
+    </a>
+    <a href="process_inventory.html" style="text-decoration: none; color: inherit;">
+      <div class="design-box">
+        <h3>
+          <span>CDC Conceptual Process Inventory</span>
+          <span class="info-icon" data-description="Visually lists and outlines the key operational and support processes undertaken by the CDC that needed to perform the services.">ⓘ</span>
+        </h3>
+      </div>
+    </a>
+    <a href="tech_inventory.html" style="text-decoration: none; color: inherit;">
+      <div class="design-box">
+        <h3>
+          <span>CDC Conceptual Technology Inventory</span>
+          <span class="info-icon" data-description="Provides a high-level architecture of the CDC's technology ecosystem. Although not representative in this example, it is meant to illustrate the major systems, security tools, data flows, and integrations that form the technical foundation for CDC operations.">ⓘ</span>
+        </h3>
+      </div>
+    </a>
+  </div>
+
+  <div class="arrow right"></div>
+
+  <a href="strategic_roadmap.html" style="text-decoration: none; color: inherit;">
+    <div class="final-box">
+      <h3>
+        <span>1-3 Year CDC Strategic Execution Roadmap</span>
+        <span class="info-icon" data-description="Details the phased plan for implementing and maturing the Cyber Defence Centre's capabilities over the next one to three years. This roadmap outlines key initiatives, timelines, milestones, and resource considerations to achieve strategic objectives.">ⓘ</span>
+      </h3>
+    </div>
+  </a>
+
+<div id="customTooltip" class="custom-tooltip" style="display: none;"></div>
+    <script>
+      const customTooltip = document.getElementById('customTooltip');
+
+      function showCustomTooltip(event, text) {
+          if (!customTooltip || !text) return;
+          customTooltip.innerHTML = text;
+          customTooltip.style.display = 'block';
+          let x = event.pageX + 15;
+          let y = event.pageY + 15;
+          if (x + customTooltip.offsetWidth + 15 > window.innerWidth) {
+              x = event.pageX - customTooltip.offsetWidth - 15;
+          }
+          if (y + customTooltip.offsetHeight + 15 > window.innerHeight) {
+              y = event.pageY - customTooltip.offsetHeight - 15;
+          }
+          customTooltip.style.left = x + 'px';
+          customTooltip.style.top = y + 'px';
+      }
+
+      function hideCustomTooltip() {
+          if (!customTooltip) return;
+          customTooltip.style.display = 'none';
+      }
+
+      // Collapsible functionality for guidance box
+      document.querySelector('.content-area h2').addEventListener('click', function() {
+          const contentArea = document.querySelector('.content-area');
+          contentArea.classList.toggle('collapsed');
+      });
+
+      document.querySelectorAll('.accordion-box').forEach(box => {
+        box.addEventListener('click', () => {
+          const isActive = box.classList.contains('active');
+          const fixedAccordionContentMaxWidth = '450px'; // You can adjust this value
+          
+          // First, close all other accordions
+          document.querySelectorAll('.accordion-box').forEach(el => {
+            if (el !== box) {
+              el.classList.remove('active');
+              const content = el.nextElementSibling;
+              if (content && content.classList.contains('accordion-content')) {
+                content.style.display = 'none';
+                content.style.maxWidth = ''; // Reset max-width
+              }
+            }
+          });
+
+          // Then, toggle the clicked one
+          const currentContent = box.nextElementSibling;
+          if (!isActive) { // If it was closed, open it
+            box.classList.add('active');
+            if (currentContent && currentContent.classList.contains('accordion-content')) {
+              currentContent.style.display = 'block';
+              currentContent.style.maxWidth = fixedAccordionContentMaxWidth;
+            }
+          } else { // If it was open, close it (already handled by removing 'active' if we decide to close all first)
+            box.classList.remove('active'); // Ensure it's closed
+             if (currentContent && currentContent.classList.contains('accordion-content')) {
+                currentContent.style.display = 'none';
+                currentContent.style.maxWidth = ''; // Reset max-width
+             }
+          }
+        });
+      });
+
+      document.querySelectorAll('.info-icon').forEach(icon => {
+          icon.addEventListener('mouseover', function(event) {
+              showCustomTooltip(event, this.getAttribute('data-description'));
+          });
+          icon.addEventListener('mouseout', hideCustomTooltip);
+          icon.addEventListener('click', function(event) {
+              event.stopPropagation(); // Prevent accordion from toggling if icon is inside header
+          });
+      });
+    </script>
+</body>
+</html>

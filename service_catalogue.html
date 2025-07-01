@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CF Example CDC Service Catalogue</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #07182D; /* Main page background */
+            min-height: 100vh;
+            color: #FFFFFF; /* Default text color for the page */
+        }
+
+        /* Page Header (for Home Icon, Title, Global Controls) */
+        .page-header {
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .page-header h1 {
+            margin: 0 0 15px 0;
+            color: #FFFFFF;
+        }
+
+        .actions-bar {
+            display: flex;
+            justify-content: space-between; /* Key for alignment */
+            align-items: center;           /* Vertically aligns items */
+        }
+		
+        .back-link {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: #112a44; /* Dark blue, similar to column headers */
+            color: #02C8FF;            /* Light blue text */
+            text-decoration: none;
+            border-radius: 5px;
+            border: 1px solid #02C8FF; /* Light blue border */
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-size: 0.9em;
+            white-space: nowrap; /* Prevent link from wrapping */
+        }
+
+        .back-link:hover {
+            background-color: #02C8FF; /* Light blue background on hover */
+            color: #112a44;            /* Dark blue text on hover */
+        }
+
+        .global-controls {
+            display: flex;
+            gap: 10px;
+            /* margin-left: 15px; /* No longer needed due to space-between */
+            flex-shrink: 0; /* Prevent global controls from shrinking if title is long */
+        }
+
+        .global-controls button {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            background-color: var(--button_light_bg_color);
+            color: var(--button_light_text_color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .global-controls button:hover {
+            background-color: #02C8FF;
+        }
+
+        /* Matrix Container */
+        .service-matrix-container-wrapper {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .service-matrix-container {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 10px;
+            padding-bottom: 10px;
+            border: 1px solid var(--container_border_color);
+            padding: 15px;
+            background-color: var(--container_bg_color);
+            max-width: 95vw;
+            border-radius: 8px;
+        }
+
+        /* Service Group Column and Header */
+        .service-group-column {
+            flex: 0 0 280px;
+            background-color: #ffffff;
+            border: 1px solid var(--column_border_color);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            min-height: 300px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            color: #333333; /* Default text color for column content */
+        }
+
+        .service-group-header {
+            background-color: var(--header_bg_color);
+            color: var(--header_text_color);
+            padding: 10px;
+            font-weight: bold;
+            border-bottom: 1px solid var(--column_border_color);
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            line-height: 1.2;
+        }
+
+        .service-group-header > span:first-child:not(.info-icon) {
+            flex-grow: 1;
+            text-align: left;
+            margin-right: 5px;
+        }
+
+        /* Services List and Cells */
+        .services-list {
+            padding: 10px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .service-cell {
+            background-color: var(--service_cell_bg_color);
+            border: 1px solid var(--service_cell_border_color);
+            padding: 10px 8px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            line-height: 1.3;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .service-cell.has-components > .service-cell-content {
+            cursor: pointer;
+        }
+        .service-cell:not(.has-components) {
+            cursor: pointer;
+        }
+
+        .service-cell:hover:not(.has-components) {
+            background-color: var(--service_cell_hover_bg_color);
+            border-color: var(--service_cell_hover_border_color);
+        }
+        .service-cell.has-components > .service-cell-content:hover {
+             background-color: var(--service_cell_hover_bg_color);
+        }
+
+        .service-cell-content {
+            display: flex;
+            align-items: center;
+            padding: 2px 0;
+            border-radius: 3px;
+        }
+
+        .toggler-icon {
+            margin-right: 8px;
+            font-size: 11px;
+            display: inline-block;
+            width: 12px;
+            line-height: 1;
+            text-align: center;
+            transition: transform 0.2s ease-in-out;
+            color: #333333;
+            font-weight: bold;
+        }
+
+        .service-name {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .service-name > *:first-child:not(.info-icon),
+        .service-name > span:first-child:not(.info-icon) {
+            flex-grow: 1;
+            margin-right: 5px;
+        }
+
+        .info-icon {
+            margin-left: 0;
+            flex-shrink: 0;
+            color: #6B6B6B;
+            font-weight: bold;
+            font-size: 0.9em;
+            cursor: help;
+            border: 1px solid transparent;
+            border-radius: 50%;
+            padding: 0px 3px;
+            line-height: 1;
+        }
+        .info-icon:hover {
+            color: #FECC02;
+            background-color: #6B6B6B;
+        }
+
+        .service-group-header .info-icon {
+            color: var(--header_text_color);
+        }
+
+        .service-group-header .info-icon:hover {
+             color: #FFFFFF;
+             background-color: #0a2540;
+        }
+
+        .components-wrapper {
+            margin-top: 8px;
+            padding-left: 20px;
+        }
+
+        .components-wrapper.collapsed {
+            display: none;
+        }
+
+        .component-cell {
+            background-color: var(--component_cell_bg_color);
+            border: 1px dashed var(--component_cell_border_color);
+            padding: 6px 6px 6px 10px;
+            margin-top: 0;
+            margin-bottom: 6px;
+            margin-left: 0;
+            border-radius: 4px;
+            font-size: 0.85em;
+            line-height: 1.3;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .component-cell:last-child {
+            margin-bottom: 0;
+        }
+
+        .component-cell > span:first-child:not(.info-icon) {
+            flex-grow: 1;
+            margin-right: 5px;
+        }
+
+        :root {
+            --container_border_color: #cccccc;
+            --container_bg_color: #e9ecef;
+            --column_border_color: #dddddd;
+            --header_bg_color: #112a44;
+            --header_text_color: #FECC02;
+            --button_light_bg_color: #F0F4F8;
+            --button_light_text_color: #0a2540;
+            --service_cell_bg_color: #D6D6D6;
+            --service_cell_border_color: #D6DDE5;
+            --service_cell_hover_bg_color: #B4B9C0;
+            --service_cell_hover_border_color: #B8C2CC;
+            --component_cell_bg_color: #B4B9C0;
+            --component_cell_border_color: #D1D9E1;
+        }
+
+        .custom-tooltip {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            z-index: 1000;
+            font-size: 14px;
+            width: 250px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            pointer-events: none;
+            line-height: 1.4;
+        }
+
+                .content-area {
+            background-color: rgba(17, 42, 68, 0.8);
+            border: 1px solid #02C8FF;
+            border-radius: 8px;
+            padding: 30px;
+            min-height: 30px;
+        }
+
+        .content-area h2 { /* Main title for the page content */
+            color: #FECC02;
+            text-align: center; 
+            margin-top: 0;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-header">
+        <h1>CF Example CDC Service Catalogue</h1>
+
+        <div class="actions-bar">
+            <div class="navigation-container">
+                <a href="index.html" class="back-link">&larr; Back to Strategy Overview</a>
+            </div>
+            <div class="global-controls">
+                <button id="expandAllBtn">Expand All</button>
+                <button id="collapseAllBtn">Collapse All</button>
+            </div>
+        </div>
+    </div>
+
+        <div class="content-area">
+        <h2>Guidance and Disclaimer</h2>
+        <p><strong><font size="2" color="#FECC02">Guidance:</strong></font><font size="2" color="#FFFFFF">
+        <br>This section of the interactive CDC Strategy tool provides an example CDC Service Catalogue, including a set of potential CDC services and their components organised in a prospective functional structure.
+        <br>Attendees at the future CDC Strategy Workshop should familiarise themselves with the high-level descriptions of the potential CDC services and their components, and the prospective functional structure, and prepare the following:
+        <ul>
+            <li>A list of services that are specified in the example CDC Service Catalogue that should not be provided by the future CDC.</li>
+            <li>A list of additional services that should be provided by the future CDC but are not in the example CDC Service Catalogue.</li>
+        </ul>
+            Completion of the above will help ensure the CDC Strategy Workshop can focus on discussing and capturing the value, advantages and disadvantages of the inclusion of each service, and the optimal operating model.
+</font></p>
+        <p><strong><font size="2" color="#FECC02">Disclaimer:</strong></font><font size="2" color="#FFFFFF"> This is an example CDC Service Catalogue that covers a comprehensive set of CDC services that Cisco has seen similar organisations to CF perform or plan to perform. It is highly likely that CF will not need all the services described, and there may be services that CF require that are not currently included. These will be discussed and agreed on at the CDC Strategy Workshop.</font></p>
+    </div>
+<br>
+
+    <div class="service-matrix-container-wrapper">
+        <div class="service-matrix-container" id="matrixContainer">
+            <div class="service-group-column">
+                <div class="service-group-header">Loading...</div>
+                <div class="services-list">
+                    <div class="service-cell">Please wait</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="customTooltip" class="custom-tooltip" style="display: none;"></div>
+    <script>
+        const matrixData = [
+            {
+                serviceGroupName: "SG001: CDC Services Management",
+                serviceGroupId: "SG001",
+                description: "Overall management and governance of CDC services, ensuring alignment with organizational objectives and operational excellence.",
+                services: [
+                    {
+                        serviceName: "CDC Business Services Management",
+                        serviceId: "SG001-S01",
+                        description: "Manages the business aspects of CDC services, including strategic alignment, financial oversight, and customer engagement to ensure value delivery.",
+                        components: [
+                            { name: "CDC Strategy and Planning", id: "SG001-S01-C01", description: "Defines strategic goals, long-term plans, and roadmaps for CDC services." },
+                            { name: "CDC Financial Management", id: "SG001-S01-C02", description: "Oversees budgeting, cost control, financial reporting, and investment for CDC services." },
+                            { name: "CDC Consumer Engagement", id: "SG001-S01-C03", description: "Manages interactions, relationships, and feedback mechanisms with consumers of CDC services." },
+                            { name: "CDC Continuous Service Improvement", id: "SG001-S01-C04", description: "Focuses on ongoing enhancements, optimization, and innovation of service delivery processes and outcomes." }
+                        ]
+                    },
+                    {
+                        serviceName: "CDC IT Services Management",
+                        serviceId: "SG001-S02",
+                        description: "Manages the complete lifecycle of IT services that underpin CDC operations, from planning to delivery and support.",
+                        components: [
+                            { name: "CDC IT Planning, Definition Analysis and Design", id: "SG001-S02-C01", description: "Involves requirements gathering, analysis, architectural design, and solution definition for IT services." },
+                            { name: "CDC IT Program / Project Delivery", id: "SG001-S02-C02", description: "Oversees the successful delivery and execution of IT programs and projects related to CDC services." },
+                            { name: "CDC IT Service Delivery", id: "SG001-S02-C03", description: "Manages the day-to-day delivery, maintenance, and support of IT services to users and systems." }
+                        ]
+                    },
+                    {
+                        serviceName: "CDC Operations Management",
+                        serviceId: "SG001-S03",
+                        description: "Ensures the smooth, efficient, and reliable day-to-day operation of all CDC services and supporting infrastructure.",
+                        components: [
+                            { name: "CDC Service Risk Management", id: "SG001-S03-C01", description: "Identifies, assesses, mitigates, and monitors risks associated with CDC service operations." },
+                            { name: "CDC Service Quality Assurance", id: "SG001-S03-C02", description: "Ensures CDC services consistently meet defined quality standards, performance metrics, and user expectations." },
+                            { name: "CDC Service Capacity and Efficiency Management", id: "SG001-S03-C03", description: "Manages service capacity, monitors performance, and optimizes efficiency to meet current and future demand." },
+                            { name: "CDC Operational Health Reporting", id: "SG001-S03-C04", description: "Provides regular reports and dashboards on the operational status, health, and performance of CDC services." },
+                            { name: "CDC Audit and Compliance Support", id: "SG001-S03-C05", description: "Supports internal and external audit activities and ensures adherence to relevant compliance regulations and policies." },
+                            { name: "CDC Knowledge Management", id: "SG001-S03-C06", description: "Manages the creation, sharing, utilization, and maintenance of knowledge assets within CDC operations." },
+                            { name: "CDC Frameworks and Policy Lifecycle Management", id: "SG001-S03-C07", description: "Manages the development, implementation, and lifecycle of operational frameworks, standards, and policies." }
+                        ]
+                    },
+                    {
+                        serviceName: "CDC Human Resource Management",
+                        serviceId: "SG001-S04",
+                        description: "Manages all personnel-related aspects for CDC staff, including recruitment, professional development, and performance management.",
+                        components: [
+                            { name: "CDC Job Design and Analysis", id: "SG001-S04-C01", description: "Defines job roles, responsibilities, skill requirements, and competency frameworks for CDC staff." },
+                            { name: "CDC Staff Recruitment and Selection", id: "SG001-S04-C02", description: "Manages the end-to-end process of recruiting, interviewing, and selecting qualified personnel for CDC." },
+                            { name: "CDC Staff Development and Training", id: "SG001-S04-C03", description: "Oversees learning programs, professional development initiatives, and certification training for CDC staff." },
+                            { name: "CDC Staff Performance Management", id: "SG001-S04-C04", description: "Manages the performance appraisal process, provides feedback, and supports career development for CDC staff." },
+                            { name: "CDC Team Assignment Management", id: "SG001-S04-C05", description: "Manages the strategic assignment of staff to various teams, projects, and operational roles within CDC." }
+                        ]
+                    },
+                    {
+                        serviceName: "CDC Vendor & Security Service Provider Management",
+                        serviceId: "SG001-S05",
+                        description: "Manages relationships, contracts, and performance of external vendors and third-party security service providers.",
+                        components: [
+                            { name: "CDC Vendor and Service Provider Selection", id: "SG001-S05-C01", description: "Manages the evaluation and selection process for engaging external vendors and service providers." },
+                            { name: "CDC Vendor and Service Provider Relationship and Communications Management", id: "SG001-S05-C02", description: "Maintains ongoing relationships, communication channels, and governance with vendors and providers." },
+                            { name: "CDC Vendor and Service Provider Performance Management", id: "SG001-S05-C03", description: "Monitors, evaluates, and manages the performance of vendors and service providers against contractual obligations and SLAs." }
+                        ]
+                    }
+                ]
+            },
+            {
+                serviceGroupName: "SG002: CDC Centre of Excellence and Innovation",
+                serviceGroupId: "SG002",
+                description: "Drives innovation, research, and development of advanced cybersecurity capabilities, fostering collaboration and thought leadership.",
+                services: [
+                    {
+                    serviceName: "Cyber Range",
+                    serviceId: "SG002-S01",
+                    description: "Provides a realistic, simulated environment for cybersecurity training, testing of tools, and validation of incident response playbooks.",
+                    components: [
+                            { name: "Component 1", id: "SG002-S01-C01", description: "Manages the evaluation and selection process for xxxxxxxx xx yyy aaaaa bbb zzzzz." },
+                            { name: "Component 2", id: "SG002-S01-C02", description: "Maintains ongoing relationships for xxxxxxxx xx yyy aaaaa bbb zzzzz" },
+                            { name: "Component 3", id: "SG002-S01-C03", description: "Monitors, evaluates, and manages the performance of xxxxxxxx xx yyy aaaaa bbb zzzzz" }
+                        ]
+                    },
+                    { serviceName: "Security for IT/OT/IoT/AI Development", serviceId: "SG002-S02", description: "Focuses on embedding security principles and practices into the development lifecycle (DevSecOps) of IT, OT, IoT, and AI systems." },
+                    { serviceName: "CDC Automation, AI & Data Management", serviceId: "SG002-S03", description: "Develops and manages automation solutions, AI/ML models, and data management strategies to enhance CDC capabilities." },
+                    { serviceName: "Post-Quantum Security Development", serviceId: "SG002-S04", description: "Researches, develops, and promotes security solutions and cryptographic methods resilient to threats from future quantum computers." },
+                    { serviceName: "Centre of Academic Collaboration", serviceId: "SG002-S05", description: "Fosters and manages strategic collaborations with academic institutions on cybersecurity research, education, and talent development." },
+                    { serviceName: "Centre of Third-Party Collaboration", serviceId: "SG002-S06", description: "Manages strategic partnerships and collaborations with industry peers, government agencies, and other third-party organizations on cybersecurity initiatives." }
+                ]
+            },
+            {
+                serviceGroupName: "SG003: CDC Managed Services Development",
+                serviceGroupId: "SG003",
+                description: "Focuses on the strategic design, robust engineering, and efficient process management for the development of CDC's managed security services portfolio that is provided to the branches.",
+                services: [
+                    { serviceName: "Managed Services Architecture Design", serviceId: "SG003-S01", description: "Designs the comprehensive architecture, frameworks, and technical blueprints for new and existing managed security services." },
+                    { serviceName: "Managed Services Engineering", serviceId: "SG003-S02", description: "Involves the technical engineering, build-out, integration, and testing of managed security service platforms and capabilities." },
+                    { serviceName: "Managed Services Process Management", serviceId: "SG003-S03", description: "Defines, documents, optimizes, and manages the operational processes and workflows for delivering managed security services effectively." }
+                ]
+            },
+            {
+                serviceGroupName: "SG004: CDC Managed Services Management",
+                serviceGroupId: "SG004",
+                description: "Oversees the ongoing operational management, governance, and delivery excellence of CDC's portfolio of managed security services that is provided to the branches.",
+                services: [
+                    { serviceName: "Policy & Framework Management", serviceId: "SG004-S01", description: "Develops, maintains, and enforces policies, standards, and operational frameworks governing managed security services." },
+                    { serviceName: "Security Architecture Design Management", serviceId: "SG004-S02", description: "Manages and evolves the security architecture design for client environments under managed services, ensuring alignment with best practices." },
+                    { serviceName: "Risk Management", serviceId: "SG004-S03", description: "Identifies, assesses, treats, and monitors risks associated with the delivery and consumption of managed security services." },
+                    {
+                        serviceName: "Personnel Services Management",
+                        serviceId: "SG004-S04",
+                        description: "Manages all human aspects related to the personnel delivering managed services, ensuring skilled and effective teams.",
+                        components: [
+                            { name: "Onboarding Orientation", id: "SG004-S04-C01", description: "Facilitates the comprehensive onboarding and orientation process for new personnel joining managed service teams." },
+                            { name: "Knowledge Management", id: "SG004-S04-C02", description: "Manages the capture, storage, sharing, and utilization of knowledge and best practices within managed services teams." },
+                            { name: "Cyber Education", id: "SG004-S04-C03", description: "Provides continuous cybersecurity education, awareness programs, and specialized training for managed services staff." },
+                            { name: "Performance Development", id: "SG004-S04-C04", description: "Focuses on the ongoing performance evaluation, skill development, and career progression of managed services personnel." },
+                            { name: "Operational Support", id: "SG004-S04-C05", description: "Provides essential operational support functions, tools, and resources for managed services delivery teams." }
+                        ]
+                    },
+                    { serviceName: "Business Continuity and Disaster recovery Management", serviceId: "SG004-S05", description: "Develops, maintains, and tests business continuity and disaster recovery plans to ensure resilience of managed services." },
+                    { serviceName: "External Public Relations Management", serviceId: "SG004-S06", description: "Manages external communications, media relations, and public perception related to CDC's managed services offerings." }
+                ]
+            },
+            {
+                serviceGroupName: "SG005: CDC National Cyber Threat Information Sharing & Analysis Management",
+                serviceGroupId: "SG005",
+                description: "Manages and facilitates the secure and effective sharing and collaborative analysis of cyber threat information at a national level.",
+                services: [
+                    {
+                        serviceName: "National Cyber Threat Info Sharing & Analysis",
+                        serviceId: "SG005-S01",
+                        description: "Core service for facilitating the exchange, processing, and collaborative analysis of cyber threat intelligence among national stakeholders.",
+                        components: [
+                            { name: "Intelligence Directive management", id: "SG005-S01-C01", description: "Manages intelligence requirements, collection directives, and priorities for national threat information sharing." },
+                            { name: "Data Curation & Refinement", id: "SG005-S01-C02", description: "Collects, processes, normalizes, enriches, and refines cyber threat data from diverse sources for analysis." },
+                            { name: "Analysis & Analytics", id: "SG005-S01-C03", description: "Performs in-depth analysis, applies advanced analytics, and generates actionable insights from curated cyber threat intelligence." },
+                            { name: "Signal Relay & Distribution", id: "SG005-S01-C04", description: "Securely distributes processed intelligence, threat indicators, and actionable alerts to relevant national stakeholders and systems." },
+                            { name: "Feedback Loop", id: "SG005-S01-C05", description: "Manages feedback mechanisms from stakeholders to continuously improve the quality, relevance, and effectiveness of shared intelligence." }
+                        ]
+                    }
+                ]
+            },
+            {
+                serviceGroupName: "SG006: CDC Critical Asset Management",
+                serviceGroupId: "SG006",
+                description: "Focuses on the comprehensive identification, assessment, monitoring, and protection of designated critical assets within the CDC and the branches, acting as the single source of truth for critical assets.",
+                services: [
+                    {
+                        serviceName: "CDC Critical Asset Visibility Assurance",
+                        serviceId: "SG006-S01",
+                        description: "Ensures comprehensive and continuous visibility into the status, configuration, and vulnerabilities of critical assets.",
+                        components: [
+                            { name: "Critical Asset Discovery Management", id: "SG006-S01-C01", description: "Manages the processes and tools for discovering, inventorying, and classifying critical assets across the environment." },
+                            { name: "Critical Asset Integration Development", id: "SG006-S01-C02", description: "Develops and maintains integrations to gather security telemetry and contextual data from and about critical assets." },
+                            { name: "Critical Asset Hardening Management", id: "SG006-S01-C03", description: "Manages the process of applying security configurations and hardening baselines to critical assets to reduce attack surface." },
+                            { name: "Critical Asset Continuous Visibility Validation", id: "SG006-S01-C04", description: "Continuously validates the accuracy of asset inventory, the effectiveness of visibility tools, and the integrity of asset data." }
+                        ]
+                    },
+                    {
+                        serviceName: "CDC Critical Asset Assessment",
+                        serviceId: "SG006-S02",
+                        description: "Performs various in-depth security assessments to identify vulnerabilities, misconfigurations, and potential attack paths related to critical assets.",
+                        components: [
+                            { name: "Asset Threat Modelling", id: "SG006-S02-C01", description: "Systematically identifies potential threats, attack vectors, and security weaknesses specific to critical assets and their context." },
+                            { name: "IoT/OT/ICS Penetration Testing", id: "SG006-S02-C02", description: "Conducts specialized penetration tests targeting Internet of Things (IoT), Operational Technology (OT), and Industrial Control Systems (ICS) environments." },
+                            { name: "Infrastructure Penetration Testing", id: "SG006-S02-C03", description: "Performs penetration testing on underlying IT infrastructure components supporting critical assets, including networks, servers, and systems." },
+                            { name: "Application Penetration Testing", id: "SG006-S02-C04", description: "Conducts penetration tests on software applications that are part of, or interact with, critical assets." },
+                            { name: "Adversary Emulation", id: "SG006-S02-C05", description: "Simulates the tactics, techniques, and procedures (TTPs) of known adversaries to test the resilience and detection capabilities related to critical assets." },
+                            { name: "Breach & Attack Simulation", id: "SG006-S02-C06", description: "Utilizes automated tools and platforms to continuously simulate various breach and attack scenarios against critical assets to validate security controls." }
+                        ]
+                    }
+                ]
+            },
+            {
+                serviceGroupName: "SG007: CDC Detection Engineering and Response Management",
+                serviceGroupId: "SG007",
+                description: "Manages the lifecycle of security detection capabilities and orchestrates effective response processes for the branches.",
+                services: [
+                    { serviceName: "Detection Engineering & Response Development", serviceId: "SG007-S01", description: "Develops, tests, and refines detection rules, signatures, analytical models, and incident response playbooks." },
+                    { serviceName: "Detection Engineering & Response Content Distribution", serviceId: "SG007-S02", description: "Manages the timely and accurate distribution of detection logic and response procedures to relevant security tools and platforms." },
+                    { serviceName: "Detection Engineering & Response Content Catalog Management", serviceId: "SG007-S03", description: "Maintains a centralized, version-controlled catalog of all detection rules, response playbooks, and related security content." }
+                ]
+            },
+            {
+                serviceGroupName: "SG008: CDC Critical Incident Response Collaboration & Coordination",
+                serviceGroupId: "SG008",
+                description: "Coordinates and collaborates effectively during critical security incidents, including performing deep forensic analysis and managing external engagements for the branches.",
+                services: [
+                    {
+                        serviceName: "CDC Forensics & Deep Analysis",
+                        serviceId: "SG008-S01",
+                        description: "Conducts in-depth forensic investigations and detailed technical analysis of security incidents to determine root cause, scope, and impact.",
+                        components: [
+                            { name: "Evidence Collection", id: "SG008-S01-C01", description: "Manages the forensically sound collection, preservation, and documentation of digital evidence from affected systems." },
+                            { name: "Evidence Storage", id: "SG008-S01-C02", description: "Ensures the secure storage, chain of custody, and integrity management for all collected digital evidence." },
+                            { name: "Static Analysis", id: "SG008-S01-C03", description: "Performs analysis of files, malware, and system artifacts without executing them, examining code, strings, and metadata." },
+                            { name: "Dynamic Analysis", id: "SG008-S01-C04", description: "Analyzes malware or suspicious files by observing their behavior, network traffic, and system interactions in a controlled sandbox environment." },
+                            { name: "External IR", id: "SG008-S01-C05", description: "Coordinates and collaborates with external incident response teams, law enforcement, or other third-party entities during major incidents." }
+                        ]
+                    }
+                ]
+            },
+            {
+                serviceGroupName: "SG009: To be discussed in workshop",
+                serviceGroupId: "SG009",
+                description: "To be discussed in workshop.",
+                services: [
+                    {
+                        serviceName: "To be discussed in workshop",
+                        serviceId: "SG009-S01",
+                        description: "Conducts in-depth forensic investigations and detailed technical analysis of security incidents to determine root cause, scope, and impact.",
+                        components: [
+                            { name: "To be discussed in workshop", id: "SG009-S01-C01", description: "To be discussed in workshop." },
+                            { name: "To be discussed in workshop", id: "SG009-S01-C02", description: "To be discussed in workshop." },
+                            { name: "To be discussed in workshop", id: "SG009-S01-C03", description: "To be discussed in workshop." },
+                        ]
+                    }
+                ]
+            }
+        ];
+        // =======================================================================
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        //                  END OF matrixData ARRAY (PART 2 - FULLY POPULATED)
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        // =======================================================================
+// =======================================================================
+        // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+        //          START OF JAVASCRIPT FUNCTIONS (PART 3 - WITH CUSTOM TOOLTIP)
+        // VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+        // =======================================================================
+
+        // Get a reference to the custom tooltip element
+        const customTooltip = document.getElementById('customTooltip');
+
+        // Helper function to show the custom tooltip
+        function showCustomTooltip(event, text) {
+            if (!customTooltip || !text) return;
+            customTooltip.innerHTML = text; // Use innerHTML if your descriptions might contain simple HTML
+            customTooltip.style.display = 'block';
+            
+            // Basic positioning - adjust as needed for better placement
+            let x = event.pageX + 15;
+            let y = event.pageY + 15;
+
+            // Prevent tooltip from going off-screen (very basic example)
+            if (x + customTooltip.offsetWidth > window.innerWidth) {
+                x = event.pageX - customTooltip.offsetWidth - 15;
+            }
+            if (y + customTooltip.offsetHeight > window.innerHeight) {
+                y = event.pageY - customTooltip.offsetHeight - 15;
+            }
+
+            customTooltip.style.left = x + 'px';
+            customTooltip.style.top = y + 'px';
+        }
+
+        // Helper function to hide the custom tooltip
+        function hideCustomTooltip() {
+            if (!customTooltip) return;
+            customTooltip.style.display = 'none';
+        }
+
+
+        // 2. Function to create a service cell (and its components, if any)
+        function createServiceElement(serviceData) {
+            const serviceCell = document.createElement('div');
+            serviceCell.className = 'service-cell';
+            serviceCell.setAttribute('data-id', serviceData.serviceId);
+            // Remove main title from cell if custom tooltips are preferred for info
+            // serviceCell.setAttribute('title', `${serviceData.serviceName} (${serviceData.serviceId})`); 
+
+            const serviceCellContent = document.createElement('div'); 
+            serviceCellContent.className = 'service-cell-content';
+
+            const serviceNameContainer = document.createElement('span'); 
+            serviceNameContainer.className = 'service-name';
+
+            const serviceNameTextNode = document.createTextNode(serviceData.serviceName);
+            serviceNameContainer.appendChild(serviceNameTextNode);
+
+            if (serviceData.description && serviceData.description.trim() !== "") {
+                const infoIcon = document.createElement('span');
+                infoIcon.className = 'info-icon';
+                infoIcon.textContent = 'ⓘ'; 
+                // infoIcon.setAttribute('title', serviceData.description); // REMOVE default title
+                infoIcon.setAttribute('data-description', serviceData.description); // STORE in data attribute
+
+                infoIcon.addEventListener('mouseover', function(event) {
+                    showCustomTooltip(event, this.getAttribute('data-description'));
+                });
+                infoIcon.addEventListener('mouseout', hideCustomTooltip);
+                infoIcon.addEventListener('click', function(event) { event.stopPropagation(); });
+                serviceNameContainer.appendChild(infoIcon); 
+            }
+
+
+            if (serviceData.components && serviceData.components.length > 0) {
+                serviceCell.classList.add('has-components'); 
+                const togglerIcon = document.createElement('span');
+                togglerIcon.className = 'toggler-icon';
+                togglerIcon.textContent = '►'; 
+                serviceCellContent.appendChild(togglerIcon);
+                serviceCellContent.appendChild(serviceNameContainer); 
+                serviceCell.appendChild(serviceCellContent);
+
+                const componentsWrapper = document.createElement('div');
+                componentsWrapper.className = 'components-wrapper collapsed'; 
+                serviceData.components.forEach(comp => {
+                    const componentCell = document.createElement('div');
+                    componentCell.className = 'component-cell';
+                    componentCell.setAttribute('data-id', comp.id);
+                    
+                    const componentNameTextNode = document.createTextNode(comp.name); // Just the text
+                    componentCell.appendChild(componentNameTextNode);
+
+                    if (comp.description && comp.description.trim() !== "") {
+                        const compInfoIcon = document.createElement('span');
+                        compInfoIcon.className = 'info-icon';
+                        compInfoIcon.textContent = 'ⓘ';
+                        // compInfoIcon.setAttribute('title', comp.description); // REMOVE default title
+                        compInfoIcon.setAttribute('data-description', comp.description); // STORE in data attribute
+
+                        compInfoIcon.addEventListener('mouseover', function(event) {
+                            showCustomTooltip(event, this.getAttribute('data-description'));
+                        });
+                        compInfoIcon.addEventListener('mouseout', hideCustomTooltip);
+                        compInfoIcon.addEventListener('click', function(event) { event.stopPropagation(); });
+                        componentCell.appendChild(compInfoIcon); 
+                    }
+                    componentsWrapper.appendChild(componentCell);
+                });
+                serviceCell.appendChild(componentsWrapper);
+            } else {
+                serviceCellContent.appendChild(serviceNameContainer); 
+                serviceCell.appendChild(serviceCellContent);
+            }
+            return serviceCell;
+        }
+
+        // 3. Function to create a service group column
+        function createServiceGroupColumnElement(serviceGroupData) {
+            const column = document.createElement('div');
+            column.className = 'service-group-column';
+
+            const header = document.createElement('div'); 
+            header.className = 'service-group-header';
+            // header.setAttribute('title', `${serviceGroupData.serviceGroupName} (${serviceGroupData.serviceGroupId})`); // Optional: keep for header itself
+            
+            const headerTextSpan = document.createElement('span'); 
+            headerTextSpan.textContent = serviceGroupData.serviceGroupName;
+            header.appendChild(headerTextSpan);
+
+            if (serviceGroupData.description && serviceGroupData.description.trim() !== "") {
+                const infoIcon = document.createElement('span');
+                infoIcon.className = 'info-icon';
+                infoIcon.textContent = 'ⓘ';
+                // infoIcon.setAttribute('title', serviceGroupData.description); // REMOVE
+                infoIcon.setAttribute('data-description', serviceGroupData.description); // STORE
+
+                infoIcon.addEventListener('mouseover', function(event) {
+                    showCustomTooltip(event, this.getAttribute('data-description'));
+                });
+                infoIcon.addEventListener('mouseout', hideCustomTooltip);
+                infoIcon.addEventListener('click', function(event) { event.stopPropagation(); });
+                header.appendChild(infoIcon); 
+            }
+            column.appendChild(header);
+            
+            const servicesList = document.createElement('div');
+            servicesList.className = 'services-list';
+            if (serviceGroupData.services && serviceGroupData.services.length > 0) {
+                serviceGroupData.services.forEach(serv => {
+                    servicesList.appendChild(createServiceElement(serv));
+                });
+            } else {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.textContent = "No services listed.";
+                emptyMsg.style.padding = "10px";
+                emptyMsg.style.fontSize = "0.8em";
+                emptyMsg.style.color = "#6c757d";
+                servicesList.appendChild(emptyMsg);
+            }
+            column.appendChild(servicesList);
+            return column;
+        }
+
+        // 4. Populate the matrix dynamically (remains the same)
+        function populateMatrix() {
+            const matrixContainer = document.getElementById('matrixContainer');
+            if (!matrixContainer) { console.error("Matrix container not found!"); return; }
+            matrixContainer.innerHTML = ''; 
+            matrixData.forEach(serviceGroupData => {
+                const serviceGroupColumnElement = createServiceGroupColumnElement(serviceGroupData);
+                matrixContainer.appendChild(serviceGroupColumnElement);
+            });
+            addEventListenersToCells();
+            addGlobalControlEvents(); 
+        }
+        
+        // 5. Add interactivity (remains largely the same, click on info icon is handled by its own listener now)
+        function addEventListenersToCells() {
+            document.querySelectorAll('.service-cell').forEach(cell => {
+                const contentArea = cell.querySelector('.service-cell-content');
+                if (cell.classList.contains('has-components') && contentArea) {
+                    contentArea.addEventListener('click', function(event) {
+                        if (event.target.classList.contains('info-icon') || (event.target.parentElement && event.target.parentElement.classList.contains('info-icon'))) {
+                            return; 
+                        }
+                        toggleServiceCell(cell); 
+                    });
+                } else if (!cell.classList.contains('has-components')) { 
+                    cell.addEventListener('click', function(event) {
+                        if (event.target.classList.contains('info-icon') || (event.target.parentElement && event.target.parentElement.classList.contains('info-icon'))) {
+                            return; 
+                        }
+                        const serviceId = this.getAttribute('data-id');
+                        const serviceName = this.querySelector('.service-name span:first-child') ? this.querySelector('.service-name span:first-child').textContent : this.querySelector('.service-name').textContent.replace(/ⓘ$/, '').trim();
+                        alert(`You clicked on Service (no components): ${serviceName} (ID: ${serviceId})`);
+                    });
+                }
+            });
+
+            document.querySelectorAll('.component-cell').forEach(cell => {
+                cell.addEventListener('click', function(event) {
+                    if (event.target.classList.contains('info-icon') || (event.target.parentElement && event.target.parentElement.classList.contains('info-icon'))) {
+                        return; 
+                    }
+                    event.stopPropagation(); 
+                    const componentId = this.getAttribute('data-id');
+                    let componentName = "";
+                    const nameNode = cell.childNodes[0]; // Assuming text node is first
+                    if (nameNode && nameNode.nodeType === Node.TEXT_NODE) {
+                        componentName = nameNode.textContent.trim();
+                    } else if (cell.querySelector('span:not(.info-icon)')) { // Or a span that isn't the icon
+                        componentName = cell.querySelector('span:not(.info-icon)').textContent.trim();
+                    }
+                    alert(`You clicked on Component: ${componentName} (ID: ${componentId})`);
+                });
+            });
+        }
+
+        // Helper function to toggle a single service cell (remains the same)
+        function toggleServiceCell(serviceCellElement, forceState) { 
+            const componentsWrapper = serviceCellElement.querySelector('.components-wrapper');
+            const togglerIcon = serviceCellElement.querySelector('.toggler-icon');
+            if (componentsWrapper && togglerIcon) {
+                let expand = forceState === 'expand' ? true : (forceState === 'collapse' ? false : componentsWrapper.classList.contains('collapsed'));
+                componentsWrapper.classList.toggle('collapsed', !expand);
+                serviceCellElement.classList.toggle('expanded', expand);
+                togglerIcon.textContent = expand ? '▼' : '►';
+            }
+        }
+
+        // 6. Add event listeners for global controls (remains the same)
+        function addGlobalControlEvents() {
+            const expandAllBtn = document.getElementById('expandAllBtn');
+            const collapseAllBtn = document.getElementById('collapseAllBtn');
+            if (expandAllBtn) {
+                expandAllBtn.addEventListener('click', () => document.querySelectorAll('.service-cell.has-components').forEach(cell => toggleServiceCell(cell, 'expand')));
+            }
+            if (collapseAllBtn) {
+                collapseAllBtn.addEventListener('click', () => document.querySelectorAll('.service-cell.has-components').forEach(cell => toggleServiceCell(cell, 'collapse')));
+            }
+        }
+
+        populateMatrix();
+
+    </script>
+
+</body>
+</html>

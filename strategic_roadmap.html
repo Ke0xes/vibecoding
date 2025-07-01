@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1-3 Year CDC Strategic Execution Roadmap (Interactive)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #07182D;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .page-main-title {
+            margin: 0 0 30px 10px;
+            color: #fff;
+            font-size: 2rem;
+            letter-spacing: 1px;
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+        }
+
+        .page-actions-bar { /* Re-using from process map for consistency */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        .back-link {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: #112a44;
+            color: #02C8FF;
+            text-decoration: none;
+            border-radius: 5px;
+            border: 1px solid #02C8FF;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .back-link:hover {
+            background-color: #02C8FF;
+            color: #112a44;
+        }
+        
+        .global-controls {
+            display: flex;
+            gap: 10px;
+        }
+        .global-controls button {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            background-color: #F0F4F8; /* Example */
+            color: #0a2540; /* Example */
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .global-controls button:hover {
+            background-color: #02C8FF;
+        }
+
+        .content-area {
+            background-color: rgba(17, 42, 68, 0.8);
+            border: 1px solid #74BF4B; 
+            border-radius: 8px;
+            padding: 30px;
+            min-height: 30px;
+        }
+
+        .content-area h2 { 
+            color: #FECC02;
+            text-align: center; 
+            margin-top: 0;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+        }
+        .content-area > p.intro-text { /* Specific class for intro paragraph */
+            text-align: left;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+
+        /* Styles for Expandable Roadmap List */
+        .expandable-roadmap-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .expandable-roadmap-list ul { /* Nested lists */
+            list-style-type: none;
+            padding-left: 25px; /* Indentation for children */
+            display: none; /* Initially hidden */
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        .expandable-roadmap-list li {
+            margin-bottom: 3px;
+        }
+
+        .expandable-roadmap-list .roadmap-item-header {
+            display: flex;
+            align-items: center;
+            padding: 6px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+            border-left: 3px solid transparent; /* For visual hierarchy */
+        }
+        .expandable-roadmap-list .roadmap-item-header:hover {
+            background-color: rgba(254, 204, 2, 0.1); /* Yellowish hover */
+        }
+        .expandable-roadmap-list .toggler-icon {
+            margin-right: 8px;
+            font-size: 0.75em;
+            width: 14px; 
+            display: inline-block;
+            text-align: center;
+            transition: transform 0.2s ease-in-out;
+            color: #FECC02; 
+        }
+        .expandable-roadmap-list .roadmap-item-header.expanded > .toggler-icon {
+            transform: rotate(90deg);
+        }
+        /* Hide toggler if no children */
+        .expandable-roadmap-list .roadmap-item-header:not(.has-children) > .toggler-icon {
+            visibility: hidden;
+        }
+
+        /* Styling for different levels */
+        .expandable-roadmap-list .year-title { 
+            font-size: 1.3em; font-weight: bold; color: #FFFFFF; 
+            border-left-color: #FFFFFF; padding: 8px 10px;
+        }
+        .expandable-roadmap-list .quarter-title { 
+            font-size: 1.2em; font-weight: bold; color: #FECC02; 
+            border-left-color: #FECC02;
+        }
+        .expandable-roadmap-list .sg-title { 
+            font-size: 1.1em; font-weight: bold; color: #02C8FF; 
+            border-left-color: #02C8FF;
+        }
+        .expandable-roadmap-list .service-title { 
+            font-size: 1.0em; color: #E0E0E0; 
+            border-left-color: #E0E0E0;
+        }
+        .expandable-roadmap-list .component-title { 
+            font-size: 0.95em; color: #C0C0C0; 
+            border-left-color: #C0C0C0;
+        }
+        .expandable-roadmap-list .action-item { 
+            font-size: 0.9em; color: #A0A0A0; 
+            padding: 4px 0 4px 15px; 
+            position: relative;
+        }
+        .expandable-roadmap-list .action-item::before {
+            content: "▪"; /* Small square bullet */
+            position: absolute;
+            left: 0;
+            color: #74BF4B; /* Green bullet for actions */
+        }
+        .expandable-roadmap-list .milestone-item {
+            font-size: 0.9em; color: #FECC02; /* Yellow for milestones */
+            padding: 4px 0 4px 15px;
+            position: relative;
+            font-style: italic;
+        }
+        .expandable-roadmap-list .milestone-item::before {
+            content: "★"; /* Star for milestones */
+            position: absolute;
+            left: 0;
+            color: #FECC02;
+        }
+
+
+    </style>
+</head>
+<body>
+    <h1 class="page-main-title">CF Example 1-3 Year CDC Strategic Execution Roadmap</h1>
+
+    <div class="page-actions-bar">
+        <div class="navigation-container">
+            <a href="index.html" class="back-link">&larr; Back to Strategy Overview</a>
+        </div>
+        <div class="global-controls">
+            <button id="expandAllRoadmapBtn">Expand All</button>
+            <button id="collapseAllRoadmapBtn">Collapse All</button>
+        </div>
+    </div>
+<div class="content-area">
+        <h2>Guidance and Disclaimer</h2>
+        <p><strong><font size="2" color="#FECC02">Guidance:</strong></font><font size="2" color="#FFFFFF"> 
+            <br>This section of the interactive CDC Strategy tool provides an example CDC Strategic Execution Plan, based on the services and components of the example CDC Service Catalogue.
+            <br>Attendees at the future CDC Strategy Workshop should familiarise themselves with the example plan, and develop their own high-level view of the roll-out of the CDC services, e.g. which should be implemented in the first year, the second year, etc.
+</font></p>
+        <p></p>
+        <p><strong><font size="2" color="#FECC02">Disclaimer:</strong></font><font size="2" color="#FFFFFF">
+            <ul>
+                <li>High-level example roadmap items have only been included for two service groups in Quarter 1 and 2 of Year 1.</li>
+                <li>The roadmap provided is an example to aid CF’s understanding of the development of the strategy. CF’s actual roadmap will be discussed and captured at the CDC Strategy Workshop.</li>
+                <li>A three-year time horizon has been used as an example. CF’s actual time horizon will be discussed and captured at the CDC Strategy Workshop.</li>
+            </ul>
+        </font></p>
+    </div>
+<br>
+    <div class="content-area">
+        <h2>Example Strategic Execution Roadmap</h2>
+        <p class="intro-text">This roadmap outlines the phased approach for establishing and maturing the Cyber Defence Centre's (CDC) capabilities. Click items to expand and view detailed actions and milestones.</p>
+
+        <ul class="expandable-roadmap-list" id="roadmapTree">
+            <!-- Roadmap will be injected here by JavaScript -->
+        </ul>
+    </div>
+	<script>
+        const roadmapData = [
+            {
+                name: "Year 1: Foundation & Initial Capabilities",
+                type: "year", // For styling
+                quarters: [
+                    {
+                        name: "Year 1 - Quarter 1: Foundational Setup & Planning",
+                        type: "quarter",
+                        serviceGroups: [
+                            {
+                                name: "SG001: CDC Services Management",
+                                type: "sg",
+                                services: [
+                                    {
+                                        name: "CDC Business Services Management",
+                                        type: "service",
+                                        components: [
+                                            {
+                                                name: "Strategy & Planning",
+                                                type: "component",
+                                                actions: [
+                                                    "Draft initial CDC Strategic Plan & Objectives.",
+                                                    "Define core Key Performance Indicators (KPIs) for CDC.",
+                                                    "Establish initial budget framework for CDC operations."
+                                                ]
+                                            },
+                                            {
+                                                name: "Consumer Engagement",
+                                                type: "component",
+                                                actions: [
+                                                    "Identify key stakeholders and consumer groups.",
+                                                    "Develop initial communication plan for stakeholders."
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        name: "CDC IT Services Management",
+                                        type: "service",
+                                        components: [
+                                            {
+                                                name: "IT Planning & Design (CDC Internal)",
+                                                type: "component",
+                                                actions: [
+                                                    "Assess IT infrastructure requirements for CDC core tools (SIEM, SOAR, etc.).",
+                                                    "Select core technology platforms for CDC operations."
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        name: "CDC Operations Management",
+                                        type: "service",
+                                        components: [
+                                            {
+                                                name: "Frameworks & Policies",
+                                                type: "component",
+                                                actions: [
+                                                    "Draft foundational operational policies and SOPs.",
+                                                    "Establish initial knowledge management repository structure."
+                                                ]
+                                            },
+                                            {
+                                                name: "Risk Management",
+                                                type: "component",
+                                                actions: ["Conduct initial operational risk assessment for CDC setup."]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        name: "CDC Human Resource Management",
+                                        type: "service",
+                                        components: [
+                                            {
+                                                name: "Staffing & Roles",
+                                                type: "component",
+                                                actions: [
+                                                    "Define core roles for CDC leadership and initial operational team.",
+                                                    "Initiate recruitment process for key CDC positions."
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                milestones: [ // Milestones for SG001 in Q1
+                                    "CDC Director and key leadership roles filled.",
+                                    "Initial CDC operational budget approved.",
+                                    "Core technology platform vendors selected."
+                                ]
+                            },
+                            {
+                                name: "SG002: Centre of Excellence and Innovation (CoEI)",
+                                type: "sg",
+                                services: [
+                                    {
+                                        name: "Cyber Range (Planning)",
+                                        type: "service",
+                                        components: [
+                                            {
+                                                name: "Design & Requirements",
+                                                type: "component",
+                                                actions: [
+                                                    "Define objectives and scope for Cyber Range.",
+                                                    "Research and select Cyber Range platform/technologies."
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        name: "Innovation Framework (Setup)",
+                                        type: "service",
+                                        components: [
+                                            {
+                                                name: "Process Definition",
+                                                type: "component",
+                                                actions: ["Draft initial process for innovation proposal submission."]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                milestones: [ // Milestones for SG002 in Q1
+                                    "Cyber Range technology plan drafted.",
+                                    "Initial CoEI collaboration contacts identified."
+                                ]
+                            }
+                            // ... Add SG003 and SG004 for Quarter 1 here ...
+                        ],
+                        overallMilestones: [ // Milestones for the entire Quarter 1
+                            "CDC foundational strategy and governance framework v0.1 drafted.",
+                            "Key leadership team for CDC onboarded."
+                        ]
+                    },
+                    {
+                        name: "Year 1 - Quarter 2: Core Infrastructure & Process Build-out",
+                        type: "quarter",
+                        serviceGroups: [
+                            // ... Detailed breakdown for SG001, SG002, SG003, SG004 for Q2 ...
+                            // Example for SG001:
+                            {
+                                name: "SG001: CDC Services Management",
+                                type: "sg",
+                                services: [
+                                    {
+                                        name: "CDC IT Services Management",
+                                        type: "service",
+                                        components: [
+                                            {
+                                                name: "Platform Deployment",
+                                                type: "component",
+                                                actions: [
+                                                    "Deploy core SIEM and SOAR platforms (initial setup).",
+                                                    "Establish basic network connectivity for CDC tools."
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        name: "CDC Operations Management",
+                                        type: "service",
+                                        components: [
+                                            {
+                                                name: "SOP Development",
+                                                type: "component",
+                                                actions: [
+                                                    "Develop initial SOPs for monitoring and alert triage.",
+                                                    "Establish incident logging and tracking procedures."
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                milestones: ["Core SIEM platform deployed for initial logging."]
+                            }
+                            // ... etc. for other SGs in Q2 ...
+                        ],
+                        overallMilestones: [
+                            "Initial CDC monitoring capability established.",
+                            "Foundational operational SOPs v1.0 completed."
+                        ]
+                    }
+                    // ... Add Quarter 3 and Quarter 4 for Year 1 ...
+                ]
+            },
+            {
+                name: "Year 2: Enhancement & Service Expansion",
+                type: "year",
+                quarters: [
+                    // ... Detailed breakdown for Quarters in Year 2 ...
+                    {
+                        name: "Year 2 - Quarter 1: ...",
+                        type: "quarter",
+                        serviceGroups: [ /* ... */ ],
+                        overallMilestones: [ /* ... */ ]
+                    }
+                ]
+            },
+            {
+                name: "Year 3: Optimization & Proactive Defence",
+                type: "year",
+                quarters: [
+                    // ... Detailed breakdown for Quarters in Year 3 ...
+                ]
+            }
+        ];
+		function createRoadmapListItem(item, level) {
+            const li = document.createElement('li');
+            const header = document.createElement('div');
+            header.classList.add('roadmap-item-header');
+            if (item.type) {
+                header.classList.add(item.type + '-title');
+            }
+
+            const toggler = document.createElement('span');
+            toggler.classList.add('toggler-icon');
+            toggler.innerHTML = '►';
+            header.appendChild(toggler);
+
+            const title = document.createElement('span');
+            title.textContent = item.name;
+            header.appendChild(title);
+            
+            li.appendChild(header);
+
+            let childrenUl = null;
+            let hasChildren = false;
+
+            if (item.quarters || item.serviceGroups || item.services || item.components || item.actions || item.milestones) {
+                hasChildren = true;
+                header.classList.add('has-children');
+                childrenUl = document.createElement('ul');
+                childrenUl.classList.add('expandable-roadmap-list');
+
+                if (item.quarters) {
+                    item.quarters.forEach(quarter => childrenUl.appendChild(createRoadmapListItem(quarter, level + 1)));
+                } else if (item.serviceGroups) {
+                    item.serviceGroups.forEach(sg => childrenUl.appendChild(createRoadmapListItem(sg, level + 1)));
+                } else if (item.services) {
+                    item.services.forEach(service => childrenUl.appendChild(createRoadmapListItem(service, level + 1)));
+                } else if (item.components) {
+                    item.components.forEach(component => childrenUl.appendChild(createRoadmapListItem(component, level + 1)));
+                } else if (item.actions) {
+                    item.actions.forEach(actionText => {
+                        const actionLi = document.createElement('li');
+                        actionLi.classList.add('action-item');
+                        actionLi.textContent = actionText;
+                        childrenUl.appendChild(actionLi);
+                    });
+                }
+                
+                // Add overall milestones for quarters or SGs if they exist
+                if (item.overallMilestones || (item.type === 'sg' && item.milestones)) {
+                     const milestonesToDisplay = item.overallMilestones || item.milestones;
+                     milestonesToDisplay.forEach(milestoneText => {
+                        const milestoneLi = document.createElement('li');
+                        milestoneLi.classList.add('milestone-item');
+                        milestoneLi.textContent = milestoneText;
+                        childrenUl.appendChild(milestoneLi);
+                    });
+                }
+
+                li.appendChild(childrenUl);
+            } else {
+                 toggler.style.visibility = 'hidden';
+            }
+
+            header.addEventListener('click', () => {
+                if (childrenUl) {
+                    const isExpanded = childrenUl.style.display === 'block';
+                    childrenUl.style.display = isExpanded ? 'none' : 'block';
+                    header.classList.toggle('expanded', !isExpanded);
+                }
+            });
+            return li;
+        }
+
+        const roadmapTreeContainer = document.getElementById('roadmapTree');
+        if (roadmapTreeContainer) {
+            roadmapData.forEach(year => {
+                roadmapTreeContainer.appendChild(createRoadmapListItem(year, 0));
+            });
+        }
+
+        // Global Expand/Collapse for Roadmap
+        const expandAllRoadmapBtn = document.getElementById('expandAllRoadmapBtn');
+        const collapseAllRoadmapBtn = document.getElementById('collapseAllRoadmapBtn');
+
+        function toggleAllRoadmap(expand) {
+            roadmapTreeContainer.querySelectorAll('.roadmap-item-header.has-children').forEach(header => {
+                const childrenUl = header.nextElementSibling;
+                if (childrenUl && childrenUl.tagName === 'UL') {
+                    childrenUl.style.display = expand ? 'block' : 'none';
+                    header.classList.toggle('expanded', expand);
+                }
+            });
+        }
+
+        if(expandAllRoadmapBtn) expandAllRoadmapBtn.addEventListener('click', () => toggleAllRoadmap(true));
+        if(collapseAllRoadmapBtn) collapseAllRoadmapBtn.addEventListener('click', () => toggleAllRoadmap(false));
+
+    </script>
+</body>
+</html>

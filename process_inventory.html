@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDC Process Inventory (Interactive)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #07182D;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .page-main-title {
+            margin: 0 0 30px 10px;
+            color: #fff;
+            font-size: 2rem;
+            letter-spacing: 1px;
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+        }
+
+        .page-actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        .back-link {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: #112a44;
+            color: #02C8FF;
+            text-decoration: none;
+            border-radius: 5px;
+            border: 1px solid #02C8FF;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .back-link:hover {
+            background-color: #02C8FF;
+            color: #112a44;
+        }
+        
+        .global-controls {
+            display: flex;
+            gap: 10px;
+        }
+        /* Add styles for global control buttons if they are used on this page */
+        .global-controls button {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            background-color: #F0F4F8; /* Example */
+            color: #0a2540; /* Example */
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .global-controls button:hover {
+            background-color: #02C8FF;
+        }
+
+
+        .content-area {
+            background-color: rgba(17, 42, 68, 0.8);
+            border: 1px solid #02C8FF;
+            border-radius: 8px;
+            padding: 30px;
+            min-height: 30px;
+        }
+
+        .content-area h2 { /* Main title for the page content */
+            color: #FECC02;
+            text-align: center; 
+            margin-top: 0;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+        }
+
+        /* Styles for Expandable Process List */
+        .expandable-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .expandable-list ul { /* Nested lists */
+            list-style-type: none;
+            padding-left: 25px; /* Indentation for children */
+            display: none; /* Initially hidden */
+        }
+        .expandable-list li {
+            margin-bottom: 5px;
+        }
+
+        .expandable-list .list-item-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+        .expandable-list .list-item-header:hover {
+            background-color: rgba(2, 200, 255, 0.1);
+        }
+
+        .expandable-list .toggler-icon {
+            margin-right: 10px;
+            font-size: 0.8em;
+            width: 15px; /* Fixed width for alignment */
+            display: inline-block;
+            text-align: center;
+            transition: transform 0.2s ease-in-out;
+            color: #FECC02; /* Yellow toggler */
+        }
+        .expandable-list .list-item-header.expanded > .toggler-icon {
+            transform: rotate(90deg);
+        }
+
+        .expandable-list .sg-title { /* Service Group */
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #FECC02;
+        }
+        .expandable-list .service-title { /* Service */
+            font-size: 1.1em;
+            color: #02C8FF;
+        }
+        .expandable-list .component-title { /* Component */
+            font-size: 1em;
+            color: #FFFFFF; /* White for components */
+        }
+        .expandable-list .process-item { /* Individual Process */
+            font-size: 0.9em;
+            color: #D6D6D6; /* Light grey for processes */
+            padding: 5px 0 5px 15px; /* Indent processes slightly */
+            position: relative;
+        }
+        .expandable-list .process-item::before {
+            content: "»";
+            position: absolute;
+            left: 0;
+            color: #02C8FF;
+        }
+
+        /* Hide toggler if no children */
+        .expandable-list .list-item-header:not(.has-children) > .toggler-icon {
+            visibility: hidden;
+        }
+
+    </style>
+</head>
+<body>
+    <h1 class="page-main-title">CF Example CDC Process Inventory</h1>
+
+    <div class="page-actions-bar">
+        <div class="navigation-container">
+            <a href="index.html" class="back-link">&larr; Back to Strategy Overview</a>
+        </div>
+        <div class="global-controls">
+            <button id="expandAllProcessesBtn">Expand All</button>
+            <button id="collapseAllProcessesBtn">Collapse All</button>
+        </div>
+    </div>
+        <div class="content-area">
+        <h2>Guidance and Disclaimer</h2>
+        <p><strong><font size="2" color="#FECC02">Guidance:</strong></font><font size="2" color="#FFFFFF">
+        <br>This section of the interactive CDC Strategy tool provides an example CDC Process Inventory, based on the services and components of the example CDC Service Catalogue.
+        <br>Attendees at the future CDC Strategy Workshop should familiarise themselves with the processes, which may aid the understanding of the proposed CDC services and their components, and consider the equivalent processes and naming conventions in use at CF.
+        <br><strong>Note:</strong> The example processes listed should be considered as a starting point to guide process development. In many cases, a number of processes may be combined together or superseded by CF-wide processes. In other cases, services or service components may share common processes. This will be discussed in the CDC Strategy Workshop and in detail in the future CDC Service Design Workshop and deliverable.
+        </font></p>
+        <p></p>
+        <p><strong><font size="2" color="#FECC02">Disclaimer:</strong></font><font size="2" color="#FFFFFF">
+            <ul>
+                <li>Example processes have only been included for the first four service groups.</li>
+                <li>The processes provided are examples to aid CF’s understanding of the development of the strategy. The full inventory of processes will be discussed and captured at the CDC Strategy Workshop.</li>
+</ul>
+        </font></p>
+    </div>
+<br>
+
+    <div class="content-area">
+        <h2>Inventory of Potential CDC Processes</h2>
+        <p>This section lists potential operational, management, and support processes for the Cyber Defence Centre (CDC). Click on an item to expand and see related sub-items or processes. This is an illustrative inventory for further detailed process mapping.</p>
+
+        <ul class="expandable-list" id="processTree">
+            <!-- Service Groups will be injected here by JavaScript -->
+        </ul>
+    </div>
+	<script>
+        const processData = [
+            {
+                name: "SG001: CDC Services Management",
+                type: "sg", // To help with styling/identification
+                services: [
+                    {
+                        name: "CDC Business Services Management",
+                        type: "service",
+                        components: [ // Using components array even if it's just for listing processes directly under service
+                            {
+                                name: "Strategic & Financial Processes", // Grouping processes under a conceptual component
+                                type: "component",
+                                processes: [
+                                    "Strategic Planning & Roadmap Development Process",
+                                    "Service Portfolio Management Process (incl. New Service Introduction)",
+                                    "CDC Budgeting and Financial Planning Process",
+                                    "Financial Reporting and Cost Management Process"
+                                ]
+                            },
+                            {
+                                name: "Consumer & Improvement Processes",
+                                type: "component",
+                                processes: [
+                                    "Stakeholder Identification and Engagement Process",
+                                    "Service Level Agreement (SLA) Definition and Management Process",
+                                    "Customer Feedback Collection and Analysis Process",
+                                    "Service Review and Reporting Process (to consumers)",
+                                    "Continuous Service Improvement (CSI) Identification and Prioritization Process",
+                                    "CSI Implementation and Tracking Process"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        name: "CDC IT Services Management",
+                        type: "service",
+                        components: [
+                            {
+                                name: "IT Planning & Project Processes",
+                                type: "component",
+                                processes: [
+                                    "IT Requirements Gathering and Analysis Process (for CDC internal systems)",
+                                    "IT Solution Design and Architecture Process (for CDC internal systems)",
+                                    "IT Project Initiation and Planning Process",
+                                    "IT Project Execution and Monitoring Process",
+                                    "IT Project Closure and Review Process"
+                                ]
+                            },
+                            {
+                                name: "IT Operational Processes",
+                                type: "component",
+                                processes: [
+                                    "IT Change Management Process (for CDC internal systems)",
+                                    "IT Asset Management Process (for CDC internal systems)",
+                                    "IT Service Desk/Support Process (for CDC internal users)",
+                                    "IT System Maintenance and Patching Process (for CDC internal systems)"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        name: "CDC Operations Management",
+                        type: "service",
+                        processes: [ // Direct processes if no clear components for this level of list
+                            "Operational Risk Identification and Assessment Process",
+                            "Risk Treatment and Mitigation Planning Process",
+                            "Service Quality Planning and Definition Process",
+                            "Quality Assurance Monitoring and Auditing Process",
+                            "Service Capacity Planning and Forecasting Process",
+                            "Performance Monitoring and Reporting Process (internal CDC ops)",
+                            "Operational Health Dashboard Management Process",
+                            "Internal and External Audit Support Process",
+                            "Compliance Monitoring and Reporting Process",
+                            "Knowledge Capture and Documentation Process",
+                            "Knowledge Base Maintenance and Update Process",
+                            "Framework and Policy Development Process",
+                            "Framework and Policy Review and Update Process",
+                            "Framework and Policy Communication and Training Process"
+                        ]
+                    },
+                    {
+                        name: "CDC Human Resource Management",
+                        type: "service",
+                        processes: [
+                            "Job Role Definition and Competency Mapping Process",
+                            "Staff Recruitment, Interviewing, and Selection Process",
+                            "New Staff Onboarding and Orientation Process",
+                            "Staff Training Needs Analysis Process",
+                            "Staff Development Planning and Execution Process",
+                            "Performance Appraisal and Feedback Process",
+                            "Team Assignment and Resource Allocation Process",
+                            "Staff Offboarding Process"
+                        ]
+                    },
+                    {
+                        name: "CDC Vendor & Security Service Provider Management",
+                        type: "service",
+                        processes: [
+                            "Vendor/SSP Identification and Evaluation Process",
+                            "Vendor/SSP Selection and Onboarding Process",
+                            "Contract Negotiation and Management Process",
+                            "Vendor/SSP Performance Monitoring and Review Process",
+                            "Vendor/SSP Relationship Management Process",
+                            "Vendor/SSP Issue Escalation and Resolution Process",
+                            "Vendor/SSP Offboarding and Transition Process"
+                        ]
+                    }
+                ]
+            },
+            {
+                name: "SG002: CDC Centre of Excellence and Innovation (CoEI)",
+                type: "sg",
+                services: [
+                    {
+                        name: "Cyber Range Services",
+                        type: "service",
+                        processes: [
+                            "Cyber Range Scenario Development Process",
+                            "Cyber Range Exercise Planning and Execution Process",
+                            "Cyber Range Maintenance and Update Process"
+                        ]
+                    },
+                    {
+                        name: "Security for Emerging Technologies",
+                        type: "service",
+                        processes: [
+                            "Secure Development Lifecycle (SDL) Integration Process (for IT/OT/IoT/AI)",
+                            "Security Requirements Definition for New Technologies Process",
+                            "Post-Quantum Cryptography Research and Assessment Process"
+                        ]
+                    },
+                    {
+                        name: "Automation, AI & Data Management Services",
+                        type: "service",
+                        processes: [
+                            "Automation Opportunity Identification Process",
+                            "Automation Solution Development and Testing Process (e.g., SOAR playbooks)",
+                            "AI/ML Model Development and Training Process (for security)",
+                            "Security Data Collection and Management Process (for AI/ML)"
+                        ]
+                    },
+                    {
+                        name: "Collaboration Services",
+                        type: "service",
+                        processes: [
+                            "Academic Partnership Initiation and Management Process",
+                            "Joint Research Project Management Process",
+                            "Third-Party Collaboration and Information Sharing Process (CoEI focused)",
+                            "Innovation Proposal Submission and Review Process",
+                            "Proof of Concept (PoC) Management Process"
+                        ]
+                    }
+                ]
+            },
+            {
+                name: "SG003: CDC Managed Services Development",
+                type: "sg",
+                services: [
+                     {
+                        name: "Managed Services Architecture Design Processes",
+                        type: "service",
+                        processes: [
+                            "New Managed Service Idea Generation and Feasibility Study Process",
+                            "Managed Service Requirements Elicitation and Definition Process",
+                            "Managed Service Architecture Design and Validation Process",
+                            "Managed Service Technology Stack Selection Process"
+                        ]
+                    },
+                    {
+                        name: "Managed Services Engineering Processes",
+                        type: "service",
+                        processes: [
+                            "Managed Service Platform Engineering and Build Process",
+                            "Managed Service Integration Testing Process",
+                             "Managed Service Pilot Program Management Process"
+                        ]
+                    },
+                    {
+                        name: "Managed Services Process Management Processes",
+                        type: "service",
+                        processes: [
+                            "Managed Service Operational Process Design (e.g., client onboarding, reporting for a specific MSS)",
+                            "Managed Service Documentation Creation Process (SOPs, User Guides for MSS)",
+                            "Managed Service Handover to Operations Process"
+                        ]
+                    }
+                ]
+            },
+            {
+                name: "SG004: CDC Managed Services Management & Delivery",
+                type: "sg",
+                services: [
+                    {
+                        name: "MSS Governance & Framework Processes",
+                        type: "service",
+                        processes: [
+                            "MSS-Specific Policy Development and Lifecycle Management Process",
+                            "MSS Client Security Architecture Review and Approval Process",
+                            "MSS Client Risk Assessment and Management Process",
+                            "MSS Business Continuity Plan Development and Testing Process",
+                            "MSS Disaster Recovery Plan Development and Testing Process",
+                            "MSS External Communication and PR Management Process"
+                        ]
+                    },
+                    {
+                        name: "MSS Personnel Management Processes",
+                        type: "service",
+                        processes: [
+                            "MSS Staff Onboarding and Client-Specific Orientation Process",
+                            "MSS Team Knowledge Management and Sharing Process",
+                            "MSS Staff Cyber Education and Certification Tracking Process",
+                            "MSS Staff Performance Review and Development Process (Client Delivery Focused)",
+                            "MSS Team Operational Support Request Process"
+                        ]
+                    },
+                    {
+                        name: "MSS Client Delivery Processes (General)",
+                        type: "service",
+                        processes: [ // Examples, would be more specific per actual managed service
+                            "MSS Client Onboarding Process",
+                            "MSS Client Service Activation Process",
+                            "MSS Client Security Monitoring and Alerting Process",
+                            "MSS Client Incident Triage and Initial Response Process",
+                            "MSS Client Critical Incident Escalation Process",
+                            "MSS Client Vulnerability Reporting Process",
+                            "MSS Client Service Reporting Process (Scheduled & Ad-hoc)",
+                            "MSS Client Change Request Management Process",
+                            "MSS Client Service Review Meeting Process",
+                            "MSS Client Offboarding Process"
+                        ]
+                    }
+				]
+            },
+{
+    name: "SG005: CDC National Cyber Threat Information Sharing & Analysis Management",
+    type: "sg",
+    services: [
+        {
+            name: "National Cyber Threat Info Sharing & Analysis Service",
+            type: "service",
+            components: [
+                {
+                    name: "Intelligence Directive Management Processes",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                },
+                {
+                    name: "Data Curation & Refinement Processes",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                },
+                {
+                    name: "Analysis & Analytics Processes",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                },
+                {
+                    name: "Signal Relay & Distribution Processes",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                },
+                {
+                    name: "Feedback Loop Processes",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                }
+            ]
+        }
+    ]
+},
+{
+    name: "SG006: CDC Critical Asset Management",
+    type: "sg",
+    services: [
+        {
+            name: "CDC Critical Asset Visibility Assurance Service",
+            type: "service",
+            components: [
+                {
+                    name: "Discovery & Integration Processes",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                },
+                {
+                    name: "Hardening & Validation Processes",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                }
+            ]
+        },
+        {
+            name: "CDC Critical Asset Assessment Service",
+            type: "service",
+            components: [
+                {
+                    name: "Threat Modelling & Specialized Testing Processes",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                },
+                {
+                    name: "General Penetration Testing Processes",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                },
+                {
+                    name: "Assessment Reporting & Remediation Tracking",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                }
+            ]
+        }
+    ]
+},
+{
+    name: "SG007: CDC Detection Engineering and Response Management",
+    type: "sg",
+    services: [
+        {
+            name: "Detection Engineering & Response Development Service",
+            type: "service",
+            processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+        },
+        {
+            name: "Detection Engineering & Response Content Distribution Service",
+            type: "service",
+            processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+        },
+        {
+            name: "Detection Engineering & Response Content Catalog Management Service",
+            type: "service",
+            processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+        }
+    ]
+}, 
+{
+    name: "SG008: CDC Critical Incident Response Collaboration & Coordination",
+    type: "sg",
+    services: [
+        {
+            name: "CDC Forensics & Deep Analysis Service",
+            type: "service",
+            components: [
+                {
+                    name: "Evidence Handling Processes",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                },
+                {
+                    name: "Forensic Analysis Processes",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                },
+                {
+                    name: "External Coordination Processes",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                }
+            ]
+        }
+    ]
+},
+{
+    name: "SG009: To be discussed in workshop",
+    type: "sg",
+    services: [
+        {
+            name: "To be discussed in workshop",
+            type: "service",
+            components: [
+                {
+                    name: "To be discussed in workshop",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                },
+                {
+                    name: "To be discussed in workshop",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                },
+                {
+                    name: "To be discussed in workshop",
+                    type: "component",
+                    processes: [
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop",
+                        "To be discussed in workshop"
+                    ]
+                }
+            ]
+        }
+    ]
+}
+        ];
+
+        function createListItem(item) {
+            const li = document.createElement('li');
+            const header = document.createElement('div');
+            header.classList.add('list-item-header');
+            
+            const toggler = document.createElement('span');
+            toggler.classList.add('toggler-icon');
+            toggler.innerHTML = '►'; // Right-pointing triangle
+            header.appendChild(toggler);
+
+            const title = document.createElement('span');
+            title.textContent = item.name;
+            if (item.type === 'sg') title.classList.add('sg-title');
+            else if (item.type === 'service') title.classList.add('service-title');
+            else if (item.type === 'component') title.classList.add('component-title');
+            header.appendChild(title);
+            
+            li.appendChild(header);
+
+            let childrenUl = null;
+            if (item.services || item.components || item.processes) {
+                header.classList.add('has-children');
+                childrenUl = document.createElement('ul');
+                childrenUl.classList.add('expandable-list'); // For consistent styling of nested lists
+
+                if (item.services) {
+                    item.services.forEach(service => childrenUl.appendChild(createListItem(service)));
+                } else if (item.components) {
+                    item.components.forEach(component => childrenUl.appendChild(createListItem(component)));
+                } else if (item.processes) {
+                    item.processes.forEach(processName => {
+                        const processLi = document.createElement('li');
+                        processLi.classList.add('process-item');
+                        processLi.textContent = processName;
+                        childrenUl.appendChild(processLi);
+                    });
+                }
+                li.appendChild(childrenUl);
+            } else {
+                 toggler.style.visibility = 'hidden'; // Hide toggler if no children
+            }
+
+            header.addEventListener('click', () => {
+                if (childrenUl) {
+                    const isExpanded = childrenUl.style.display === 'block';
+                    childrenUl.style.display = isExpanded ? 'none' : 'block';
+                    header.classList.toggle('expanded', !isExpanded);
+                }
+            });
+            return li;
+        }
+
+        const processTreeContainer = document.getElementById('processTree');
+        processData.forEach(sg => {
+            processTreeContainer.appendChild(createListItem(sg));
+        });
+
+        // Global Expand/Collapse
+        const expandAllBtn = document.getElementById('expandAllProcessesBtn');
+        const collapseAllBtn = document.getElementById('collapseAllProcessesBtn');
+
+        function toggleAll(expand) {
+            processTreeContainer.querySelectorAll('.list-item-header.has-children').forEach(header => {
+                const childrenUl = header.nextElementSibling;
+                if (childrenUl && childrenUl.tagName === 'UL') {
+                    childrenUl.style.display = expand ? 'block' : 'none';
+                    header.classList.toggle('expanded', expand);
+                }
+            });
+        }
+
+        if(expandAllBtn) expandAllBtn.addEventListener('click', () => toggleAll(true));
+        if(collapseAllBtn) collapseAllBtn.addEventListener('click', () => toggleAll(false));
+
+    </script>
+	</body>
+</html>
